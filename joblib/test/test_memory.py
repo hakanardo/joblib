@@ -659,3 +659,30 @@ def test_memory_in_memory_function_code_change():
         _function_to_cache.__code__ = _product.__code__
         nose.tools.assert_equal(f(1, 2), 2)
         nose.tools.assert_equal(f(1, 2), 2)
+
+def test_memory_nested_in_memory_function_code_change():
+    mem = Memory(cachedir=env['dir'], verbose=0)
+
+    @mem.cache
+    def f(a, b):
+        return a + b
+
+    nose.tools.assert_equal(f(1, 2), 3)
+    nose.tools.assert_equal(f(1, 2), 3)
+
+    @mem.cache
+    def g(a, b):
+        return 10 + f(a, b)
+
+    nose.tools.assert_equal(g(1, 2), 13)
+    nose.tools.assert_equal(g(1, 2), 13)
+
+    @mem.cache
+    def f(a, b):
+        return a * b
+
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+
+        nose.tools.assert_equal(g(1, 2), 12)
+        nose.tools.assert_equal(g(1, 2), 12)
